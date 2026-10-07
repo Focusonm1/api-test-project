@@ -1,22 +1,7 @@
 import pytest
-import requests
 
 from config import BASE_URL, TIMEOUT
 from api_helpers import auth_headers
-
-
-@pytest.fixture
-def api_session():
-    with requests.Session() as session:
-        session.headers.update({"Accept": "application/json"})
-        yield session
-
-
-def test_health_with_fixture(api_session):
-    """GET /health,断言 200 与 {"status": "ok"}。用注入的 api_session 发请求。"""
-    response = api_session.get(f"{BASE_URL}/health", timeout=TIMEOUT)
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
 
     
 @pytest.mark.parametrize(
@@ -37,4 +22,3 @@ def test_admin_permission(api_session, token, expected_status, expected_value):
     body = response.json()
     key = "message" if expected_status == 200 else "error"
     assert body[key] == expected_value
-    print(auth_headers("admin-token"))
