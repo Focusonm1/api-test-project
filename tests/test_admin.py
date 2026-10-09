@@ -22,3 +22,11 @@ def test_admin_permission(api_session, token, expected_status, expected_value):
     body = response.json()
     key = "message" if expected_status == 200 else "error"
     assert body[key] == expected_value
+
+
+def test_logged_in_user_cannot_access_admin(api_session, user_token):
+    response = api_session.get(
+        f"{BASE_URL}/admin", headers=auth_headers(user_token), timeout=TIMEOUT
+    )
+    assert response.status_code == 403
+    assert response.json() == {"error": "permission_denied"}
