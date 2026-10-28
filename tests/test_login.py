@@ -42,3 +42,36 @@ def test_login_invalid_json(api_session):
     )
     assert response.status_code == 400
     assert response.json() == {"error": "invalid_json"}
+
+
+def test_login_unsupported_content_type(api_session):
+    response = api_session.post(
+        f"{BASE_URL}/login",
+        data='{"username": "qa01", "password": "123456"}',
+        headers={"Content-Type": "text/plain"},
+        timeout=TIMEOUT,
+    )
+    assert response.status_code == 415 ,f"Expected status code 415, got {response.status_code}"
+    assert response.json() == {"error": "unsupported_media_type"}
+
+
+def test_login_header_with_charset(api_session) ->None:
+    response = api_session.post(
+            f"{BASE_URL}/login",
+            data='{"username": "qa01", "password": "123456"}',
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            timeout=TIMEOUT,
+        )
+    assert response.status_code == 200 ,f"Expected status code 200, got {response.status_code}"
+    assert response.json() == {"token": "user-token","user": "qa01"}
+
+
+def test_login_with_unsupported_content_type(api_session) ->None:
+    response = api_session.post(
+            f"{BASE_URL}/login",
+            data='not json',
+            headers={"Content-Type": "text/plain"},
+            timeout=TIMEOUT,
+        )
+    assert response.status_code == 415 ,f"Expected status code 415, got {response.status_code}"
+    assert response.json() == {"error": "unsupported_media_type"}

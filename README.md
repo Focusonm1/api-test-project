@@ -13,7 +13,7 @@ uv sync
 uv run pytest -v
 ```
 
-当前共有 20 条测试用例。默认请求地址为 `http://127.0.0.1:8000`，无需提前手动启动服务：
+当前共有 23 条测试用例。默认请求地址为 `http://127.0.0.1:8000`，无需提前手动启动服务：
 
 - 如果本地服务没有启动，fixture 会自动启动它，并在本次测试结束后关闭。
 - 如果该地址已有可响应的服务，则直接复用，测试结束后不会关闭它。请确保端口上运行的是本项目的服务。
@@ -54,7 +54,7 @@ api-test-project/
 | 接口 | 测试点 | 用例数 |
 |---|---|---|
 | GET /health | 状态码和健康状态 | 1 |
-| POST /login | 正确登录、错误密码、用户不存在、缺密码字段、空 JSON 对象、非对象 JSON、非法 JSON | 7 |
+| POST /login | 正确登录、错误密码、用户不存在、缺密码字段、空 JSON 对象、非对象 JSON、非法 JSON、媒体类型校验及 charset 参数 | 10 |
 | GET /admin | 未带 token、无效 token、普通用户 token、管理员 token，以及实际登录后验证普通用户无权访问 | 5 |
 | GET /echo | 单个参数、多个参数、无参数、中文、同名多值、空值参数 | 6 |
 | GET /nope | 不存在的路径返回 404 和对应错误信息 | 1 |
@@ -117,3 +117,18 @@ open report.html
 ```
 
 `--self-contained-html` 将报告样式打包进 HTML 文件，方便单独分享。再次使用同一命令会覆盖上一次报告
+
+
+## 登录请求的内容类型
+
+`POST /login` 接收 `application/json`，支持 `application/json; charset=utf-8` 这样的参数形式。
+
+- 内容类型不受支持：返回 415 和 `{"error": "unsupported_media_type"}`。
+- 内容类型受支持，但 JSON 格式损坏：返回 400 和 `{"error": "invalid_json"}`。
+- 内容类型检查在 JSON 解析之前执行。
+
+## GitHub Actions
+
+配置位于 `.github/workflows/tests.yml`。提交并推送该文件后，GitHub 将在 push、pull request 或手动触发时使用 Ubuntu 运行测试。步骤为获取代码、准备 Python 3.11 和 uv 0.12.0、按 uv.lock 安装依赖、运行 pytest。现有 fixture 负责在该运行环境中启动和清理本地被测服务。
+
+在仓库的 Actions 页面查看每次运行和失败日志。当前配置已在本地准备，首次 GitHub 运行仍待提交推送后验证。

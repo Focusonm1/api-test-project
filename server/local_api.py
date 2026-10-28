@@ -56,6 +56,11 @@ class ApiHandler(BaseHTTPRequestHandler):
             self.send_json(404, {"error": "not_found", "path": parsed.path})
             return
 
+        content_type = self.headers.get_content_type()
+        if content_type != "application/json":
+            self.send_json(415, {"error": "unsupported_media_type"})
+            return
+
         try:
             length = int(self.headers.get("Content-Length", "0"))
             raw = self.rfile.read(length)
